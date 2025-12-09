@@ -85,27 +85,19 @@ function loadData() {
 
 function saveItems() {
   localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(state.items));
-  updateDataFile('items');
 }
 
 function saveTemplates() {
   localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(state.templates));
-  updateDataFile('templates');
 }
 
 function saveProjects() {
   localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(state.projects));
 }
 
-function updateDataFile(type) {
-  // In a browser environment, we can't directly write to files
-  // This is for reference - actual file operations would need a backend
-  console.log(`Data saved to localStorage: ${type}`);
-}
-
 // ===== Utility Functions =====
 function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
 function showPanel(panelId) {
@@ -844,12 +836,12 @@ function copyPrompt() {
   navigator.clipboard.writeText(text).then(() => {
     alert('提示词已复制到剪贴板！');
   }).catch(() => {
-    // Fallback
+    // Fallback for older browsers that don't support the Clipboard API
     const textarea = document.createElement('textarea');
     textarea.value = text;
     document.body.appendChild(textarea);
     textarea.select();
-    document.execCommand('copy');
+    document.execCommand('copy'); // Deprecated but necessary for older browser support
     document.body.removeChild(textarea);
     alert('提示词已复制到剪贴板！');
   });
