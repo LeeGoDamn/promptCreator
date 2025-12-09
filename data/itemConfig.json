@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1",
+    "name": "主体元素",
+    "type": "text",
+    "options": "",
+    "priority": 1,
+    "hidden": false,
+    "group": "自定义输入分组"
+  },
+  {
+    "id": "2",
+    "name": "风格",
+    "type": "checkbox",
+    "options": "吉卜力,赛博朋克,古风",
+    "priority": 2,
+    "hidden": false,
+    "group": "画风类"
+  }
+]

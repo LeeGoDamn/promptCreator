@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文生图提示词工程系统</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-title">🎨 提示词工程系统</div>
+    <button class="nav-btn active" data-panel="itemsPanel">词条清单</button>
+    <button class="nav-btn" data-panel="templatesPanel">文本模板</button>
+    <button class="nav-btn" data-panel="projectsPanel">提示词工程</button>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="container">
+    
+    <!-- 词条清单 Panel -->
+    <div id="itemsPanel" class="panel active">
+      <div class="panel-header">
+        <h1 class="panel-title">📝 词条清单</h1>
+        <div>
+          <button class="btn btn-primary" onclick="openAddItemModal()">+ 新增词条</button>
+        </div>
+      </div>
+      <p style="margin-bottom: 20px; color: #666;">
+        配置不同内容维度的提示词。支持文本框和复选框两种类型，可设置优先级和分组。
+      </p>
+      <div id="itemsList"></div>
+    </div>
+
+    <!-- 文本模板 Panel -->
+    <div id="templatesPanel" class="panel">
+      <div class="panel-header">
+        <h1 class="panel-title">📄 文本模板</h1>
+        <div>
+          <button class="btn btn-primary" onclick="openAddTemplateModal()">+ 新增模板</button>
+        </div>
+      </div>
+      <p style="margin-bottom: 20px; color: #666;">
+        创建提示词模板，定义生成规则和额外固定要求。使用 {词条名称} 作为占位符。
+      </p>
+      <div id="templatesList"></div>
+    </div>
+
+    <!-- 提示词工程 Panel -->
+    <div id="projectsPanel" class="panel">
+      <div class="panel-header">
+        <h1 class="panel-title">🚀 提示词工程</h1>
+        <div>
+          <button class="btn btn-primary" onclick="openAddProjectModal()">+ 新建项目</button>
+        </div>
+      </div>
+      <p style="margin-bottom: 20px; color: #666;">
+        创建项目，选择模板和词条，运行生成提示词。
+      </p>
+      <div id="projectsList"></div>
+    </div>
+
+  </div>
+
+  <!-- Item Modal -->
+  <div id="itemModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="itemModalTitle">新增词条</h2>
+        <button class="modal-close" onclick="hideModal('itemModal')">&times;</button>
+      </div>
+      <form id="itemForm" onsubmit="event.preventDefault(); saveItem();">
+        <div class="form-group">
+          <label class="form-label">提示词名称 *</label>
+          <input type="text" id="itemName" class="form-input" placeholder="例如：主体元素、风格" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">提示词类型 *</label>
+          <select id="itemType" class="form-select" onchange="onItemTypeChange()">
+            <option value="text">文本框</option>
+            <option value="checkbox">复选框（Checkbox）</option>
+          </select>
+        </div>
+        <div class="form-group" id="itemOptionsGroup" style="display: none;">
+          <label class="form-label">可选项（用英文逗号分隔）*</label>
+          <input type="text" id="itemOptions" class="form-input" placeholder="例如：吉卜力,赛博朋克,古风">
+        </div>
+        <div class="form-group">
+          <label class="form-label">展示优先级（1-1000，数值越小越靠前）</label>
+          <input type="number" id="itemPriority" class="form-input" value="100" min="1" max="1000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">提示词分组</label>
+          <input type="text" id="itemGroup" class="form-input" placeholder="例如：画风类、自定义输入分组" value="默认分组">
+        </div>
+        <div class="form-group">
+          <label class="form-checkbox-label" style="background: transparent;">
+            <input type="checkbox" id="itemHidden">
+            <span>是否隐藏（隐藏后在项目中不可见）</span>
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="hideModal('itemModal')">取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Template Modal -->
+  <div id="templateModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="templateModalTitle">新增模板</h2>
+        <button class="modal-close" onclick="hideModal('templateModal')">&times;</button>
+      </div>
+      <form id="templateForm" onsubmit="event.preventDefault(); saveTemplate();">
+        <div class="form-group">
+          <label class="form-label">模板名称 *</label>
+          <input type="text" id="templateName" class="form-input" placeholder="例如：默认模板" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">生成规则 * <small style="color: #999;">（使用 {词条名称} 作为占位符）</small></label>
+          <textarea id="templateRules" class="form-textarea" placeholder="例如：请生成一张{主体元素}的图片，风格为{风格}" rows="5" required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">额外固定要求 <small style="color: #999;">（追加到最后）</small></label>
+          <input type="text" id="templateExtra" class="form-input" placeholder="例如：高清、4K">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="hideModal('templateModal')">取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Project Modal -->
+  <div id="projectModal" class="modal-overlay">
+    <div class="modal" style="max-width: 800px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="projectModalTitle">新建项目</h2>
+        <button class="modal-close" onclick="hideModal('projectModal')">&times;</button>
+      </div>
+      <form id="projectForm" onsubmit="event.preventDefault(); saveProject();">
+        <div class="form-group">
+          <label class="form-label">项目名称 *</label>
+          <input type="text" id="projectName" class="form-input" placeholder="例如：我的项目" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">选择模板 *</label>
+          <select id="projectTemplate" class="form-select" required>
+          </select>
+        </div>
+        
+        <div class="stats-box">
+          <div class="stats-number" id="combinationCount">0</div>
+          <div class="stats-label">可能的提示词组合数</div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">配置词条（勾选启用，设置优先级和选项）</label>
+          <div id="projectEntryConfig"></div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="hideModal('projectModal')">取消</button>
+          <button type="submit" class="btn btn-primary">保存项目</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Run Project Modal -->
+  <div id="runProjectModal" class="modal-overlay">
+    <div class="modal" style="max-width: 800px;">
+      <div class="modal-header">
+        <h2 class="modal-title">🚀 运行项目: <span id="runProjectName"></span></h2>
+        <button class="modal-close" onclick="hideModal('runProjectModal')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">随机种子（可选，留空则完全随机）</label>
+        <input type="number" id="runSeed" class="form-input" placeholder="输入数字作为种子">
+      </div>
+      <div style="margin-bottom: 20px;">
+        <button class="btn btn-success" onclick="executeProject()" style="width: 100%; padding: 15px; font-size: 16px;">
+          ▶️ 生成提示词
+        </button>
+      </div>
+      <div id="runResults"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideModal('runProjectModal')">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer with Export/Import -->
+  <div style="text-align: center; padding: 20px; color: rgba(255,255,255,0.7);">
+    <button class="btn btn-secondary" onclick="exportData()" style="margin-right: 10px;">📥 导出数据</button>
+    <label class="btn btn-secondary" style="cursor: pointer;">
+      📤 导入数据
+      <input type="file" accept=".json" onchange="importData(event)" style="display: none;">
+    </label>
+    <p style="margin-top: 15px; font-size: 12px;">
+      数据存储在浏览器本地存储中 | 建议定期导出备份
+    </p>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
